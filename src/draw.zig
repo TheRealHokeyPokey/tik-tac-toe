@@ -2,18 +2,11 @@ const std = @import("std");
 
 const Io = std.Io;
 const assert = std.debug.assert;
-const sort = std.sort;
-const hash_map = std.hash_map;
 
 const Game = @import("game.zig");
 
 const Board = Game.Board;
-const Player = Game.Player;
 const Cell = Game.Cell;
-const MoveTuple = Game.MoveTuple;
-const addMove = Game.addMove;
-const getWinner = Game.getWinner;
-const readMove = Game.readMove;
 
 const Coord = struct {
     i: usize,

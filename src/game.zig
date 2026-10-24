@@ -2,11 +2,16 @@ const std = @import("std");
 const Io = std.Io;
 const assert = std.debug.assert;
 const ascii = std.ascii;
+const fmt = std.fmt;
 
 pub const Cell = enum { empty, x, o };
 pub const Player = enum { x, o };
 
 pub const InvalidMoveError = error{ OutOfBounds, CellFull };
+const OutOfBounds = InvalidMoveError.OutOfBounds;
+const CellFull = InvalidMoveError.CellFull;
+
+const InvalidCharacter = fmt.ParseIntError.InvalidCharacter;
 
 pub const MoveTuple = struct {
     i: u2,
@@ -33,26 +38,74 @@ pub const Board = struct {
     }
 };
 
+pub fn readValidMove(
+    writer: *Io.Writer,
+    reader: *Io.Reader,
+    board: Board,
+) !MoveTuple {
+    while (true) {
+        const move = readMove(writer, reader, board);
+        if (move) |valid_move| {
+            return valid_move;
+        } else |err| {
+            switch (err) {
+                OutOfBounds, CellFull, InvalidCharacter => {
+                    std.log.err(
+                        "{}, selected move was invalid",
+                        .{err},
+                    );
+                    continue;
+                },
+                else => return err,
+            }
+        }
+    }
+}
+
 // prompts the player to enter a move, read from stdin
-pub fn readMove(writer: *Io.Writer, reader: *Io.Reader, board: Board) !MoveTuple {
+pub fn readMove(
+    writer: *Io.Writer,
+    reader: *Io.Reader,
+    board: Board,
+) !MoveTuple {
     const next_player_code: u8 = if (board.next_player == Player.x) 'X' else 'O';
-    try writer.print("Next player: {c}\nPlease enter your move <row[0..2]><Space><col[0..2]><Return>: ", .{next_player_code});
+    try writer.print(
+        "Next player: {c}\n" ++
+            "Please enter your move as coordinates in [0..2]\n" ++
+            "Format: <row>_<col>\n",
+        .{next_player_code},
+    );
     try writer.flush();
 
-    const row_bytes_optional = try reader.takeDelimiter(' ');
-    const row_bytes = row_bytes_optional.?;
-    const row = try std.fmt.parseInt(u2, row_bytes, 10);
-    assert(row <= 2);
+    const raw_row_bytes = try reader.takeDelimiter(' ');
+    const row = try parseBytesAsIndex(raw_row_bytes);
 
-    const col_bytes_optional = try reader.takeDelimiter('\n');
-    const col_bytes = col_bytes_optional.?;
-    const col = try std.fmt.parseInt(u2, col_bytes, 10);
-    assert(col <= 2);
+    const raw_col_bytes = try reader.takeDelimiter('\n');
+    const col = try parseBytesAsIndex(raw_col_bytes);
+
+    if (board.cells[row][col] != Cell.empty) {
+        return CellFull;
+    }
 
     try writer.print("\nMove selected: ({}, {})\n", .{ row, col });
     try writer.flush();
 
     return .{ .i = row, .j = col };
+}
+
+fn parseBytesAsIndex(raw_bytes: ?[]u8) !u2 {
+    if (raw_bytes == null) {
+        return InvalidCharacter;
+    }
+    const bytes = raw_bytes.?;
+    const index = std.fmt.parseInt(u2, bytes, 10) catch |err| switch (err) {
+        std.fmt.ParseIntError.Overflow => return OutOfBounds,
+        else => return err,
+    };
+    if (2 < index or index < 0) {
+        return OutOfBounds;
+    }
+    return index;
 }
 
 // returns the Cell corresponding to the first line of length 3 of the
@@ -100,10 +153,10 @@ pub fn addMove(board: *Board, move_tuple: MoveTuple) InvalidMoveError!void {
     const next_player = board.next_player;
 
     if (i > 2 or j > 2) {
-        return InvalidMoveError.OutOfBounds;
+        return OutOfBounds;
     }
     if (cells[i][j] != Cell.empty) {
-        return InvalidMoveError.CellFull;
+        return CellFull;
     }
     const player_cell = if (next_player == Player.x) Cell.x else Cell.o;
     cells[i][j] = player_cell;

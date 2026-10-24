@@ -18,16 +18,29 @@ const readMove = Game.readMove;
 pub const Agent = struct {
     const Self = @This();
 
-    board_value_map: *hash_map.AutoHashMapUnmanaged(Board, i2),
+    board_value_map: *hash_map.AutoHashMap(Board, i2),
     agent_player: Player,
     allocator: std.mem.Allocator,
 
-    pub fn init(agent_board_value_map: *hash_map.AutoHashMapUnmanaged(Board, i2), agent_player: Player, allocator: std.mem.Allocator) Self {
-        return .{ .board_value_map = agent_board_value_map, .agent_player = agent_player, .allocator = allocator };
+    // pub fn init(agent_player: Player, allocator: std.mem.Allocator) Self {
+    //     var board_value_map: hash_map.AutoHashMap(Board, i2) = .init(allocator);
+    //     const count = board_value_map.count();
+    //     std.log.info("Count: {}", .{count});
+    //     const cap = board_value_map.capacity();
+    //     std.log.info("Capacity: {}", .{cap});
+    //     return .{ .board_value_map = &board_value_map, .agent_player = agent_player, .allocator = allocator };
+    // }
+    pub fn init(board_value_map: *hash_map.AutoHashMap(Board, i2), agent_player: Player, allocator: std.mem.Allocator) Self {
+        // var board_value_map: hash_map.AutoHashMap(Board, i2) = .init(allocator);
+        // const count = board_value_map.count();
+        // std.log.info("Count: {}", .{count});
+        // const cap = board_value_map.capacity();
+        // std.log.info("Capacity: {}", .{cap});
+        return .{ .board_value_map = board_value_map, .agent_player = agent_player, .allocator = allocator };
     }
 
     pub fn deinit(self: Self) void {
-        self.board_value_map.deinit(self.allocator);
+        self.board_value_map.deinit();
     }
 
     pub fn getMinMaxMove(self: Self, board: Board) !MoveTuple {
@@ -45,7 +58,12 @@ pub const Agent = struct {
     }
 
     pub fn minMax(self: Self, board: Board) !i2 {
+        // const count = self.board_value_map.count();
+        // std.log.info("Count in minmax: {}", .{count});
+        // const cap = self.board_value_map.capacity();
+        // std.log.info("Capacity in minmax: {}", .{cap});
         const cachedValue = self.board_value_map.get(board);
+        // std.log.info("I got here", .{});
         if (cachedValue) |value| {
             return value;
         }
@@ -77,7 +95,8 @@ pub const Agent = struct {
                 break :blk sort.min(i2, move_values, {}, std.sort.asc(i2)).?;
             }
         };
-        try self.board_value_map.put(self.allocator, board, boardValue);
+        assert(!self.board_value_map.contains(board));
+        try self.board_value_map.put(board, boardValue);
         return boardValue;
     }
 };

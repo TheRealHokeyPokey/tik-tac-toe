@@ -9,13 +9,12 @@ const Game = tic_tak_toe.Game;
 const Board = Game.Board;
 const Player = Game.Player;
 const Cell = Game.Cell;
-const MoveTuple = Game.MoveTuple;
 const addMove = Game.addMove;
 const getWinner = Game.getWinner;
 const readMove = Game.readMove;
+const readValidMove = Game.readValidMove;
 
 const MinMax = tic_tak_toe.MinMax;
-const getPossibleMoves = MinMax.getPossibleMoves;
 const Agent = MinMax.Agent;
 
 const Draw = tic_tak_toe.Draw;
@@ -57,19 +56,23 @@ pub fn main(init: std.process.Init) !void {
 
     const human_player = Player.x;
 
-    var agent_2_board_value_map: hash_map.AutoHashMapUnmanaged(Board, i2) = .empty;
     const agent_2_player = Player.o;
+    // var agent_2_board_value_map: hash_map.AutoHashMapUnmanaged(Board, i2) = .empty;
+    // const agent_2: Agent = .init(&agent_2_board_value_map, agent_2_player, allo);
+    // const agent_2: Agent = .init(agent_2_player, allo);
+    //
+    var agent_2_board_value_map: hash_map.AutoHashMap(Board, i2) = .init(allo);
     const agent_2: Agent = .init(&agent_2_board_value_map, agent_2_player, allo);
     defer agent_2.deinit();
 
-    var winner: ?Player = null;
+    // var winner: ?Player = null;
 
     try drawBoard(board, stdout_writer);
-    while (winner == null) {
-        try stdout_writer.print("No winner yet.\n", .{});
+    const result = for (0..9) |i| {
+        try stdout_writer.print("Move {d}: No winner yet.\n", .{i});
         switch (board.next_player) {
             human_player => {
-                const human_move = try readMove(stdout_writer, stdin_reader, board);
+                const human_move = try readValidMove(stdout_writer, stdin_reader, board);
                 try addMove(&board, human_move);
                 try drawBoard(board, stdout_writer);
             },
@@ -81,9 +84,18 @@ pub fn main(init: std.process.Init) !void {
         }
         try stdout_writer.flush();
 
-        winner = getWinner(board);
+        if (getWinner(board)) |winner| {
+            break winner;
+        }
+    } else null;
+
+    if (result) |winner| {
+        switch (winner) {
+            Player.x => try stdout_writer.print("Player X won!\n", .{}),
+            Player.o => try stdout_writer.print("Player O won!\n", .{}),
+        }
+    } else {
+        try stdout_writer.print("Draw.\n", .{});
     }
-    const winner_code: u8 = if (winner.? == Player.x) 'X' else 'O';
-    try stdout_writer.print("Player: {c} won!\n", .{winner_code});
     try stdout_writer.flush();
 }
