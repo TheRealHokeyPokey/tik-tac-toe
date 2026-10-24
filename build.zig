@@ -20,6 +20,21 @@ pub fn build(b: *std.Build) void {
     // of this build script using `b.option()`. All defined flags (including
     // target and optimize options) will be listed when running `zig build --help`
     // in this directory.
+    const player_x_human = b.option(
+        bool,
+        "player_x_human",
+        "Player X is human, else bot - default true",
+    ) orelse true;
+
+    const player_o_human = b.option(
+        bool,
+        "player_o_human",
+        "Player O is human, else bot - default false",
+    ) orelse false;
+
+    const options = b.addOptions();
+    options.addOption(bool, "player_x_human", player_x_human);
+    options.addOption(bool, "player_o_human", player_o_human);
 
     // This creates a module, which represents a collection of source files alongside
     // some compilation options, such as optimization mode and linked system libraries.
@@ -82,6 +97,8 @@ pub fn build(b: *std.Build) void {
             },
         }),
     });
+
+    exe.root_module.addOptions("build_options", options);
 
     // This declares intent for the executable to be installed into the
     // install prefix when running `zig build` (i.e. when executing the default
