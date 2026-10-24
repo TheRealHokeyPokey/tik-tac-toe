@@ -58,10 +58,7 @@ pub fn main(init: std.process.Init) !void {
 
     var move_array: [9]MoveTuple = undefined;
 
-    // var agent_board_value_map: hash_map.AutoHashMapUnmanaged(Board, i2) = .empty;
     const agent_player = Player.x;
-    // const agent: Agent = .init(&agent_board_value_map, agent_player, allo);
-    // defer agent.deinit();
 
     var agent_2_board_value_map: hash_map.AutoHashMapUnmanaged(Board, i2) = .empty;
     const agent_2_player = Player.o;
@@ -73,7 +70,6 @@ pub fn main(init: std.process.Init) !void {
     try stdout_writer.print("Human chose move: {}\n", .{human_move});
 
     try drawBoard(board, stdout_writer);
-    // std.log.info("I got here", .{});
 
     human_move = try readMove(stdout_writer, stdin_reader, board);
     try addMove(&board, human_move);
@@ -81,7 +77,6 @@ pub fn main(init: std.process.Init) !void {
 
     try drawBoard(board, stdout_writer);
     while (true) {
-        // try stdout_writer.print("Possible moves: {any}\n", .{possible_moves});
         switch (board.next_player) {
             agent_player => {
                 // const agent_move = try agent.getMinMaxMove(board);

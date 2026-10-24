@@ -49,18 +49,6 @@ pub fn drawBoard(board: Board, writer: *Io.Writer) !void {
     knitBoard(board, &output_array);
     try printKnittedArray(writer, &output_array);
 
-    // for (0..3) |i| {
-    //     for (0..3) |j| {
-    //         switch (board.cells[i][j]) {
-    //             Cell.x => try drawX(writer),
-    //             Cell.o => try drawO(writer),
-    //             Cell.empty => try drawEmpty(writer),
-    //         }
-    //     }
-    // }
-    // const cp = try getCursorPosition(writer, reader);
-    // try writer.print("Cursor row: {}, cursor col: {}\n", .{ cp.i, cp.j });
-
     try writer.flush();
 }
 
@@ -98,17 +86,6 @@ fn writeFormatToKnittedArray(row: usize, col: usize, format: *[5][5]u8, knitted_
         }
     }
 }
-// fn knitBoard(board: Board, knitted_array: *[15][15]u8) void {
-//     for (0..3) |a| {
-//         for (0..5) |i| {
-//             for (0..5) |j| {
-//                 const knit_i = i + a * 5;
-//                 const knit_j = j + a * 5;
-//                 knitted_array[knit_i][knit_j] = arrays[a][i][j];
-//             }
-//         }
-//     }
-// }
 
 fn moveCursorToCell(writer: *Io.Writer, coord: Coord) !void {
     _ = coord;
@@ -117,10 +94,6 @@ fn moveCursorToCell(writer: *Io.Writer, coord: Coord) !void {
     try moveCursorToPosition(row, col, writer);
 }
 
-// fn drawInPosition(writer: *Io.Writer, format: []const u8) !void {
-//
-// }
-//
 fn formatToSymbolArray(format_string: []const u8, array: *[5][5]u8) !void {
     array.* = @splat(@splat(' '));
     var i: usize = 0;
@@ -135,30 +108,6 @@ fn formatToSymbolArray(format_string: []const u8, array: *[5][5]u8) !void {
         }
     }
 }
-
-// fn print2DArrayInPosition(writer: *Io.Writer, array: [5][5]u8) !void {}
-
-// fn drawX(writer: *Io.Writer) !void {
-//
-//     try writer.print(xFormat, .{});
-//     try moveCursorUpNRow(writer, 5);
-//     try moveCursorRightNCol(writer, 6);
-//     try drawLineDown(writer, 5);
-// }
-//
-// fn drawO(writer: *Io.Writer) !void {
-//     try writer.print(oFormat, .{});
-//     try moveCursorUpNRow(writer, 5);
-//     try moveCursorRightNCol(writer, 6);
-//     try drawLineDown(writer, 5);
-// }
-
-// fn drawEmpty(writer: *Io.Writer) !void {
-//     try writer.print(emptyFormat, .{});
-//     try moveCursorUpNRow(writer, 5);
-//     try moveCursorRightNCol(writer, 6);
-//     try drawLineDown(writer, 5);
-// }
 
 fn drawLineDown(writer: *Io.Writer, length: usize) !void {
     for (0..length) |_| {
@@ -209,23 +158,6 @@ fn restoreANSICursorPosition(writer: *Io.Writer) !void {
     try writer.print("\x1B[u", .{});
 }
 
-// pub fn getCursorPosition(writer: *Io.Writer, reader: *Io.Reader) !Coord {
-//     try writer.print("\x1B[6n", .{});
-//     try writer.flush();
-//     // NOTE: relies on response in form: `ESC[#;#R` which may be brittle
-//     _ = try reader.peek(2);
-//     reader.toss(2);
-//     const rowString = try reader.takeDelimiter(';');
-//     const row = try std.fmt.parseInt(usize, rowString.?, 10);
-//
-//     const colString = try reader.takeDelimiter('R');
-//     const col = try std.fmt.parseInt(usize, colString.?, 10);
-//
-//     try eraseLine(writer);
-//     try writer.print
-//
-//     return .{ .i = row, .j = col };
-// }
 fn eraseLine(writer: *Io.Writer) !void {
     try writer.print("\x1B[2K", .{});
 }
