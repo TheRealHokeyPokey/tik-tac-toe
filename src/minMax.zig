@@ -18,15 +18,11 @@ const readMove = Game.readMove;
 pub const Agent = struct {
     const Self = @This();
 
-    // board_value_map: *hash_map.HashMapUnmanaged(Board, i2, hash_map.AutoContext(Board), 80),
     board_value_map: *hash_map.AutoHashMapUnmanaged(Board, i2),
-    // board_value_map: hash_map.,
     agent_player: Player,
     allocator: std.mem.Allocator,
 
     pub fn init(agent_board_value_map: *hash_map.AutoHashMapUnmanaged(Board, i2), agent_player: Player, allocator: std.mem.Allocator) Self {
-        // var agent_board_value_map: hash_map.HashMapUnmanaged(Board, i2, hash_map.AutoContext(Board), 80) = .empty;
-        // var agent_board_value_map: hash_map.AutoHashMapUnmanaged(Board, i2) = .empty;
         return .{ .board_value_map = agent_board_value_map, .agent_player = agent_player, .allocator = allocator };
     }
 
@@ -49,7 +45,6 @@ pub const Agent = struct {
     }
 
     pub fn minMax(self: Self, board: Board) !i2 {
-        // try self.board_value_map.ensureUnusedCapacity(self.allocator, 8);
         const cachedValue = self.board_value_map.get(board);
         if (cachedValue) |value| {
             return value;

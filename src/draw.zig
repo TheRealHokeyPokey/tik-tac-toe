@@ -36,9 +36,9 @@ const oFormat =
 ;
 const emptyFormat =
     \\
+    \\  .
     \\
-    \\
-    \\
+    \\  .
     \\
 ;
 
@@ -48,8 +48,6 @@ pub fn drawBoard(board: Board, writer: *Io.Writer) !void {
     var output_array: [15][15]u8 = undefined;
     knitBoard(board, &output_array);
     try printKnittedArray(writer, &output_array);
-
-    try writer.flush();
 }
 
 fn printKnittedArray(writer: *Io.Writer, array: *[15][15]u8) !void {

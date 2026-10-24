@@ -35,7 +35,8 @@ pub const Board = struct {
 
 // prompts the player to enter a move, read from stdin
 pub fn readMove(writer: *Io.Writer, reader: *Io.Reader, board: Board) !MoveTuple {
-    try writer.print("Next player: {}\nPlease enter your move <row[0..2]><Space><col[0..2]><Return>: ", .{board.next_player});
+    const next_player_code: u8 = if (board.next_player == Player.x) 'X' else 'O';
+    try writer.print("Next player: {c}\nPlease enter your move <row[0..2]><Space><col[0..2]><Return>: ", .{next_player_code});
     try writer.flush();
 
     const row_bytes_optional = try reader.takeDelimiter(' ');

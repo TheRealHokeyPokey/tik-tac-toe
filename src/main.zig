@@ -54,64 +54,36 @@ pub fn main(init: std.process.Init) !void {
     // const allo = safe_allocator.allocator();
 
     var board = Board{};
-    try stdout_writer.print("{f}\n", .{board});
 
-    var move_array: [9]MoveTuple = undefined;
-
-    const agent_player = Player.x;
+    const human_player = Player.x;
 
     var agent_2_board_value_map: hash_map.AutoHashMapUnmanaged(Board, i2) = .empty;
     const agent_2_player = Player.o;
     const agent_2: Agent = .init(&agent_2_board_value_map, agent_2_player, allo);
     defer agent_2.deinit();
 
-    var human_move = try readMove(stdout_writer, stdin_reader, board);
-    try addMove(&board, human_move);
-    try stdout_writer.print("Human chose move: {}\n", .{human_move});
+    var winner: ?Player = null;
 
     try drawBoard(board, stdout_writer);
-
-    human_move = try readMove(stdout_writer, stdin_reader, board);
-    try addMove(&board, human_move);
-    try stdout_writer.print("Human chose move: {}\n", .{human_move});
-
-    try drawBoard(board, stdout_writer);
-    while (true) {
+    while (winner == null) {
+        try stdout_writer.print("No winner yet.\n", .{});
         switch (board.next_player) {
-            agent_player => {
-                // const agent_move = try agent.getMinMaxMove(board);
-                // try addMove(&board, agent_move);
-                // try stdout_writer.print("Agent chose move: {}\n", .{agent_move});
-                // try stdout_writer.print("{f}\n", .{board});
-                human_move = try readMove(stdout_writer, stdin_reader, board);
+            human_player => {
+                const human_move = try readMove(stdout_writer, stdin_reader, board);
                 try addMove(&board, human_move);
-                // try stdout_writer.print("Human chose move: {}\n", .{human_move});
                 try drawBoard(board, stdout_writer);
-                try stdout_writer.flush();
             },
             else => {
                 const agent_move = try agent_2.getMinMaxMove(board);
                 try addMove(&board, agent_move);
-                // try stdout_writer.print("Agent 2 chose move: {}\n", .{agent_move});
-                // try stdout_writer.print("{f}\n", .{board});
                 try drawBoard(board, stdout_writer);
-                try stdout_writer.flush();
             },
         }
-
-        const possible_moves = getPossibleMoves(board, &move_array);
-        if (possible_moves.len == 0) {
-            try stdout_writer.print("Draw!\n", .{});
-            break;
-        }
-        const winner = getWinner(board);
-        if (winner) |player| {
-            try stdout_writer.print("Player: {} won!\n", .{player});
-            break;
-        } else {
-            try stdout_writer.print("No winner yet.\n", .{});
-        }
         try stdout_writer.flush();
+
+        winner = getWinner(board);
     }
+    const winner_code: u8 = if (winner.? == Player.x) 'X' else 'O';
+    try stdout_writer.print("Player: {c} won!\n", .{winner_code});
     try stdout_writer.flush();
 }
