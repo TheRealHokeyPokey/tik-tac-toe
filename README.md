@@ -17,7 +17,7 @@ zig build --help
 ## How to run (default - player x is human and player o is AI)
 
 ```sh
-zig build run
+zig build -Doptimize=fast run
 ```
 
 ## How to run (set players explicitly)
