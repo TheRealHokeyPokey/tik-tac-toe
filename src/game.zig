@@ -7,9 +7,10 @@ const fmt = std.fmt;
 pub const Cell = enum { empty, x, o };
 pub const Player = enum { x, o };
 
-pub const InvalidMoveError = error{ OutOfBounds, CellFull };
-const OutOfBounds = InvalidMoveError.OutOfBounds;
-const CellFull = InvalidMoveError.CellFull;
+pub const MoveError = error{ OutOfBounds, CellFull, Unrecoverable };
+const OutOfBounds = MoveError.OutOfBounds;
+const CellFull = MoveError.CellFull;
+const Unrecoverable = MoveError.Unrecoverable;
 
 const InvalidCharacter = fmt.ParseIntError.InvalidCharacter;
 
@@ -56,7 +57,7 @@ pub fn readValidMove(
                     );
                     continue;
                 },
-                else => return err,
+                else => return Unrecoverable,
             }
         }
     }
@@ -146,7 +147,7 @@ pub fn getWinner(board: Board) ?Player {
 }
 
 // adds a move to the board, changes the cell to match the player
-pub fn addMove(board: *Board, move_tuple: MoveTuple) InvalidMoveError!void {
+pub fn addMove(board: *Board, move_tuple: MoveTuple) MoveError!void {
     const i = move_tuple.i;
     const j = move_tuple.j;
     var cells = &board.cells;

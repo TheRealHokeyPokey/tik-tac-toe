@@ -20,6 +20,7 @@ const getWinner = Game.getWinner;
 const readMove = Game.readMove;
 const readValidMove = Game.readValidMove;
 const MoveTuple = Game.MoveTuple;
+const MoveError = Game.MoveError;
 
 const MinMax = tic_tak_toe.MinMax;
 const Agent = MinMax.Agent;
@@ -59,8 +60,6 @@ const AgentPolicy = struct {
     }
 };
 
-// fn makePlayerPolicy(comptime is_human: bool)
-
 pub fn main(init: std.process.Init) !void {
 
     // This is appropriate for anything that lives as long as the process.
@@ -87,16 +86,29 @@ pub fn main(init: std.process.Init) !void {
     var stdin_file_reader: Io.File.Reader = .init(.stdin(), io, &stdin_buffer);
     const stdin_reader = &stdin_file_reader.interface;
 
-    // fast allocator
-    const allo = std.heap.smp_allocator;
-
+    const general_allocator = std.heap.smp_allocator;
     // safe allocator (reports memory problems)
-    // const general_allocator = std.heap.smp_allocator;
-    // var safe_allocator = std.heap.SafeAllocator.init(general_allocator, .{});
-    // defer _ = safe_allocator.deinit();
-    // const allo = safe_allocator.allocator();
+    var safe_allocator = std.heap.SafeAllocator.init(general_allocator, .{});
+    defer _ = safe_allocator.deinit();
+    const allo = safe_allocator.allocator();
 
     var board = Board{};
+
+    const player_o = blk: {
+        if (player_o_human) {
+            const policy: HumanPolicy = .{
+                .reader = stdin_reader,
+                .writer = stdout_writer,
+            };
+            break :blk policy;
+        } else {
+            var agent_board_value_map: hash_map.AutoHashMap(Board, i2) = .init(allo);
+            var agent: Agent = .init(&agent_board_value_map, Player.o, allo);
+            const policy: AgentPolicy = .{ .agent = &agent };
+            break :blk policy;
+        }
+    };
+    defer player_o.deinit();
 
     const player_x = blk: {
         if (player_x_human) {
@@ -110,19 +122,6 @@ pub fn main(init: std.process.Init) !void {
         }
     };
     defer player_x.deinit();
-
-    const player_o = blk: {
-        if (player_o_human) {
-            const policy: HumanPolicy = .{ .writer = stdout_writer, .reader = stdin_reader };
-            break :blk policy;
-        } else {
-            var agent_board_value_map: hash_map.AutoHashMap(Board, i2) = .init(allo);
-            var agent: Agent = .init(&agent_board_value_map, Player.o, allo);
-            const policy: AgentPolicy = .{ .agent = &agent };
-            break :blk policy;
-        }
-    };
-    defer player_o.deinit();
 
     try drawBoard(board, stdout_writer);
     const result = for (0..9) |i| {

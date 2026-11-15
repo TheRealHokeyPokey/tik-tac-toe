@@ -14,6 +14,7 @@ const MoveTuple = Game.MoveTuple;
 const addMove = Game.addMove;
 const getWinner = Game.getWinner;
 const readMove = Game.readMove;
+const MoveError = Game.MoveError;
 
 pub const Agent = struct {
     const Self = @This();
@@ -22,21 +23,16 @@ pub const Agent = struct {
     agent_player: Player,
     allocator: std.mem.Allocator,
 
-    // pub fn init(agent_player: Player, allocator: std.mem.Allocator) Self {
-    //     var board_value_map: hash_map.AutoHashMap(Board, i2) = .init(allocator);
-    //     const count = board_value_map.count();
-    //     std.log.info("Count: {}", .{count});
-    //     const cap = board_value_map.capacity();
-    //     std.log.info("Capacity: {}", .{cap});
-    //     return .{ .board_value_map = &board_value_map, .agent_player = agent_player, .allocator = allocator };
-    // }
-    pub fn init(board_value_map: *hash_map.AutoHashMap(Board, i2), agent_player: Player, allocator: std.mem.Allocator) Self {
-        // var board_value_map: hash_map.AutoHashMap(Board, i2) = .init(allocator);
-        // const count = board_value_map.count();
-        // std.log.info("Count: {}", .{count});
-        // const cap = board_value_map.capacity();
-        // std.log.info("Capacity: {}", .{cap});
-        return .{ .board_value_map = board_value_map, .agent_player = agent_player, .allocator = allocator };
+    pub fn init(
+        board_value_map: *hash_map.AutoHashMap(Board, i2),
+        agent_player: Player,
+        allocator: std.mem.Allocator,
+    ) Self {
+        return .{
+            .board_value_map = board_value_map,
+            .agent_player = agent_player,
+            .allocator = allocator,
+        };
     }
 
     pub fn deinit(self: Self) void {
@@ -53,17 +49,17 @@ pub const Agent = struct {
             try addMove(&localBoard, move);
             move_values[index] = try self.minMax(localBoard);
         }
-        const bestMoveIndex = sort.argMax(i2, move_values, {}, std.sort.asc(i2)).?;
+        const bestMoveIndex = sort.argMax(
+            i2,
+            move_values,
+            {},
+            std.sort.asc(i2),
+        ).?;
         return possible_moves[bestMoveIndex];
     }
 
     pub fn minMax(self: Self, board: Board) !i2 {
-        // const count = self.board_value_map.count();
-        // std.log.info("Count in minmax: {}", .{count});
-        // const cap = self.board_value_map.capacity();
-        // std.log.info("Capacity in minmax: {}", .{cap});
         const cachedValue = self.board_value_map.get(board);
-        // std.log.info("I got here", .{});
         if (cachedValue) |value| {
             return value;
         }
@@ -101,7 +97,10 @@ pub const Agent = struct {
     }
 };
 
-pub fn getPossibleMoves(board: Board, move_array: *[9]MoveTuple) []const MoveTuple {
+pub fn getPossibleMoves(
+    board: Board,
+    move_array: *[9]MoveTuple,
+) []const MoveTuple {
     assert(@TypeOf(board.cells) == [3][3]Cell);
     const cells = board.cells;
     var move_index: u4 = 0;
